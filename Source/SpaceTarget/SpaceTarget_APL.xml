@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root xmlns:android="http://schemas.android.com/apk/res/android">
+  <init>
+    <log text="SpaceTarget_APL INIT"/>
+  </init>
+
+  <proguardAdditions>
+    <insert>
+    </insert>
+  </proguardAdditions>
+
+  <resourceCopies>
+    <log text="Copying libsfm.so"/>
+    <copyFile src="$S(PluginDir)/Libs/Android/arm64-v8a/libsfm.so" dst="$S(BuildDir)/libs/arm64-v8a/libsfm.so" />
+    <copyFile src="$S(PluginDir)/Libs/Android/armeabi-v7a/libsfm.so" dst="$S(BuildDir)/libs/armeabi-v7a/libsfm.so" />
+  </resourceCopies>
+
+  <resourceCopies>
+    <log text="Copying tflite"/>
+    <copyFile src="$S(PluginDir)/Libs/assets/EncARHelper.tflite" dst="$S(BuildDir)/assets/SpaceTargetAssets/EncARHelper.tflite" />
+  </resourceCopies>
+
+  <resourceCopies>
+    <copyFile  src = "$S(PluginDir)/Libs/Android/ARRelocate-2021.06.17.ar.aar"  dst = "$S(BuildDir)/libs/ARRelocate-2021.06.17.ar.aar" />
+  </resourceCopies>
+
+
+  <gameActivityImportAdditions>
+    <insert>
+      <!--import com.fdage.arbase.*;-->
+      import com.fdage.ar.*;
+      import android.content.Context;
+    </insert>
+  </gameActivityImportAdditions>
+  <gameActivityClassAdditions>
+    <insert>
+      public Context ARContext()
+      {
+        Context c = this.getApplicationContext();
+        Log.debug("getApplicationContext：" + c);
+        return c;
+      }
+    </insert>
+  </gameActivityClassAdditions>
+  <baseBuildGradleAdditions>
+    <insert>
+      allprojects 
+      {
+        repositories 
+        {
+          <!--maven { url 'http://192.168.0.97:8081/repository/maven-releases/' }-->
+      
+          maven { url 'https://maven.aliyun.com/repository/google' }
+          maven { url 'https://maven.aliyun.com/repository/jcenter' }
+          google()
+
+        }
+      }
+    </insert>
+  </baseBuildGradleAdditions>
+  <buildGradleAdditions>
+    <insert>
+      repositories
+      {
+      flatDir{ dirs '/src/main/libs/' }
+      }
+      dependencies
+      {
+        implementation (name: 'ARRelocate-2021.06.17.ar',ext:'aar')
+      }
+    </insert>
+  </buildGradleAdditions>
+</root>

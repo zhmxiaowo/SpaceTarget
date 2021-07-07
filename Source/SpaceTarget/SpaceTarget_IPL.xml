@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+
+    <init>
+        <log text="iOS platform need to put resource in SpaceTargetAssets..."/>
+          <!-- <resourceCopies> -->
+            <log text="Copying tflite"/>
+            <copyFile src="$S(PluginDir)/Libs/assets/EncARHelper.tflite" dst="$S(ProjectDir)/Content/SpaceTarget/SpaceTargetAssets/EncARHelper.tflite" />
+          <!-- </resourceCopies> -->
+    </init>
+
+</root>
