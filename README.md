@@ -8,7 +8,7 @@
 
 官网: https://www.4dkankan.com/
 
-<img src=document/doc/ueimgs/60ddcb1246dc4.gif width = "30%"  alt="tt0.top-832429.gif"/>
+<img src=document/doc/ueimgs/60ddcb1246dc4.gif width = "70%"  alt="tt0.top-832429.gif"/>
 
 ### 开发环境设置
 
