@@ -43,6 +43,7 @@ protected:
     FCameraIntrisics _cIntrisics;
     FCameraTexture _cTexture;
     int currStatus;
+    int camStatus;
 
     bool isInit;
     bool isRelocate;

@@ -56,7 +56,7 @@ void ASpaceTargetTrackbleActor::SetMesh()
     if (IFileManager::Get().FileExists(*modelPath))
     {
         //FString modelUAssets = FString::Format(*FString("StaticMesh'/SpaceTarget/SpaceTarget/Models/{0}/sfm_unreal.sfm_unreal'"),{dataBase});
-        FString modelUAssets = FString::Format(*FString("StaticMesh'/Game/SpaceTarget/Models/{0}/sfm_unreal.sfm_unreal'"), { dataBase });
+        FString modelUAssets = FString::Format(*SpaceTargetDefinition::dataModelInnerPath(), { dataBase });
         //set the model to this scene
         //static ConstructorHelpers::FObjectFinder<UStaticMesh> mesh(*modelUAssets);
         UStaticMesh* mesh = Cast<UStaticMesh>(StaticLoadObject(UStaticMesh::StaticClass(), NULL, *modelUAssets));

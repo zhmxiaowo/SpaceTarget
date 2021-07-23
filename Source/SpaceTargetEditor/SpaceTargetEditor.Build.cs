@@ -19,7 +19,11 @@ public class SpaceTargetEditor : ModuleRules
 		Log.TraceInformation(string.Format("SpaceTargetEditor Target.Type: {0}", Target.Type.ToString()));
         if (Target.Type == TargetType.Editor)
         {
-            PrivateDependencyModuleNames.AddRange(new string[] { "UnrealEd", "PropertyEditor" });//
+            PrivateDependencyModuleNames.AddRange(new string[] { "UnrealEd", "PropertyEditor","FBX", "RawMesh", "ProceduralMeshComponent",
+					"MeshDescription",
+					"StaticMeshDescription",
+					"AssetTools",
+					"AssetRegistry"});//
         }
 
 

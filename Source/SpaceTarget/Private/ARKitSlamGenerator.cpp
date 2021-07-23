@@ -38,7 +38,7 @@ bool AARKitSlamGenerator::GetCameraIntrinsics(FCameraIntrisics& ci)
 		ci.focal = OutCameraIntrinsics.FocalLength;
 		ci.pricipal = OutCameraIntrinsics.PrincipalPoint;
 		ci.resolution = OutCameraIntrinsics.ImageResolution;
-		UE_LOG(LogSpaceTarget, Log, TEXT("arTexture is 2 ! ci.resolution: %s !"), *(ci.resolution.ToString()));
+		//UE_LOG(LogSpaceTarget, Log, TEXT("arTexture is 2 ! ci.resolution: %s !"), *(ci.resolution.ToString()));
 		result = true;
 	}
 	return result;
@@ -57,7 +57,26 @@ bool AARKitSlamGenerator::GetCameraPose(FCameraPose& cp)
 		{
 			FVector cam_pos = camManager->GetCameraLocation();
 			FQuat cam_qua = camManager->GetCameraRotation().Quaternion();
-			UE_LOG(LogSpaceTarget, Log, TEXT("cam_pos : %s  cam_qua : %s"), *(cam_pos.ToString()), *(cam_qua.ToString()));
+			//UE_LOG(LogSpaceTarget, Log, TEXT("cam_pos : %s  cam_qua : %s"), *(cam_pos.ToString()), *(cam_qua.ToString()));
+
+			//unreal will change it automaticly.but we need the real rotation relative to camera image.
+			switch (FPlatformMisc::GetDeviceOrientation())
+			{
+			case EDeviceScreenOrientation::Portrait:
+				break;
+			case EDeviceScreenOrientation::LandscapeLeft:
+				cam_qua = cam_qua * FRotator(0, 0, 90).Quaternion();
+				break;
+			case EDeviceScreenOrientation::LandscapeRight:
+				cam_qua = cam_qua * FRotator(0, 0, -90).Quaternion();
+				break;
+			case EDeviceScreenOrientation::PortraitUpsideDown:
+				cam_qua = cam_qua * FRotator(0, 0, 180).Quaternion();//need test.
+				break;
+			default:
+				break;
+			}
+
 			cp.position = cam_pos;
 			cp.rotation = cam_qua;
 			if (cp.position.ContainsNaN())
@@ -149,7 +168,6 @@ bool AARKitSlamGenerator::GetCameraTexture(FCameraTexture& ct)
         //两个Frame是一样的
         ARFrame* nativeFrame = (ARFrame*)arSystem.Pin()->GetGameThreadARFrameRawPointer();
 //        ARFrame* nativeFrame2 = nativeARSession.currentFrame;
-        UE_LOG(LogSpaceTarget, Log, TEXT("processImageBuffer() enter~~~~"));
         CVPixelBufferRef imageBuffer = nativeFrame.capturedImage;
 
         //判断buffer的类型， YUV的还是 RGB的。
@@ -177,7 +195,6 @@ bool AARKitSlamGenerator::GetCameraTexture(FCameraTexture& ct)
                 const uint8_t* data = CFDataGetBytePtr(pixelData);
                 int width1 = (int)image.size.width;
                 int height1 = (int)image.size.height;
-                NSLog(@"rptest ----- width1:%d height1:%d", width1, height1);
                 
                 //赋值
                 if (ct.length != width1 * height1 * 4)
@@ -186,7 +203,6 @@ bool AARKitSlamGenerator::GetCameraTexture(FCameraTexture& ct)
                     ct.length = width1 * height1 * 4;
                     ct.data = new uint8[ct.length];
                 }
-                UE_LOG(LogSpaceTarget, Log, TEXT("arTexture is 5 %d!"), ct.length);
                 uint8* ptr = (uint8*)data;
                 
                 //拷贝一份
@@ -195,21 +211,20 @@ bool AARKitSlamGenerator::GetCameraTexture(FCameraTexture& ct)
                 data = NULL;
                 ptr = NULL;
                 
-                UE_LOG(LogSpaceTarget, Log, TEXT("arTexture is 6 !"));
                 if (ct.length > 0)
                 {
-                    //ios gpu image direction is right.
-                    ct.direction = FImageDirection::RIGHT;
+                    //ios gpu image direction is left.
+                    ct.direction = FImageDirection::LEFT;
                     result = true;
                     //测试用 - 保存为raw文件
-//                    FString path = SpaceTargetDefinition::persistentPath() + FString("img.raw");
-//                    IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
-//                    IFileHandle* FileHandle = PlatformFile.OpenWrite(*path);
-//                    if (FileHandle)
-//                    {
-//                        FileHandle->Write(ct.data, ct.length);
-//                        delete FileHandle;
-//                    }
+                    //FString path = SpaceTargetDefinition::persistentPath() + FString("img.raw");
+                    //IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+                    //IFileHandle* FileHandle = PlatformFile.OpenWrite(*path);
+                    //if (FileHandle)
+                    //{
+                    //    FileHandle->Write(ct.data, ct.length);
+                    //    delete FileHandle;
+                    //}
                 }
                 
                 UE_LOG(LogSpaceTarget, Log, TEXT("arTexture is 7 !"));

@@ -85,7 +85,7 @@ bool AndroidUtility::Init(FString& path)
         relocateObjectID = Env->NewObject(relocateClassID, Env->GetMethodID(relocateClassID, "<init>", "()V"));
         //need to delete on ~()
         relocateObjectID = Env->NewGlobalRef(relocateObjectID);
-        relocateID = FJavaWrapper::FindStaticMethod(Env, relocateClassID, "imgLocateProcess_unreal_argb32", "([F[F[F[F[I[BILjava/lang/String;Ljava/lang/String;Ljava/lang/String;I)Z", bIsOptional);
+        relocateID = FJavaWrapper::FindStaticMethod(Env, relocateClassID, "imgLocateProcess_unreal_argb32", "([F[F[F[F[I[BILjava/lang/String;Ljava/lang/String;Ljava/lang/String;II)Z", bIsOptional);
         relocateInitID = FJavaWrapper::FindStaticMethod(Env, relocateClassID, "init", "(Landroid/content/Context;Ljava/lang/String;)Z", bIsOptional);
         relocateResultID = FJavaWrapper::FindStaticMethod(Env, relocateClassID, "get_sfm_result", "()Ljava/lang/String;", bIsOptional);
         //get the android context is complex.we use UPL write a simple method 'Context ARContext()' to get it.
@@ -97,7 +97,7 @@ bool AndroidUtility::Init(FString& path)
         //if we use va_list ,when it calculate jobject memery size will make mistake.so we use ↑ original method to call it.
         //bool b = FJavaWrapper::CallBooleanMethod(Env, relocateObjectID, relocateInitID, *contextID, *jstr);
         Env->DeleteGlobalRef(jstr);
-        GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, (isCallSuccess ? FString(TEXT("init sfm success")) : FString(TEXT("init sfm failure"))));
+        //GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, (isCallSuccess ? FString(TEXT("init sfm success")) : FString(TEXT("init sfm failure"))));
     }
     //use main activity
     //if (JNIEnv* Env = FAndroidApplication::GetJavaEnv())
@@ -118,7 +118,7 @@ bool AndroidUtility::Init(FString& path)
     return isCallSuccess;
 }
 
-bool AndroidUtility::Relocate(FVector cam_positon,FQuat cam_rotation, FVector2D focal, FVector2D principal, FIntPoint resolution, uint8** cTexture, int length,int camStatus,FString aixs_x,FString aixs_y,FString aixs_z)
+bool AndroidUtility::Relocate(FVector cam_positon,FQuat cam_rotation, FVector2D focal, FVector2D principal, FIntPoint resolution, uint8** cTexture, int length,int method,FString aixs_x,FString aixs_y,FString aixs_z,int camStatus)
 {
     bool isCallSuccess = false;
 
@@ -151,7 +151,7 @@ bool AndroidUtility::Relocate(FVector cam_positon,FQuat cam_rotation, FVector2D 
         uint8* texPtr = *cTexture;
         jbyteArray j_bytes = ConvertToJByteArray(texPtr, size);
 
-        jint j_state = (jint)camStatus;
+        jint j_method = (jint)method;
 
         jstring j_x = GetJavaString(aixs_x);
         jstring j_y = GetJavaString(aixs_y);
@@ -159,8 +159,9 @@ bool AndroidUtility::Relocate(FVector cam_positon,FQuat cam_rotation, FVector2D 
 
         //ue4 : 1,  unity : 0
         jint j_platform = (jint)1;
+        jint j_state = (jint)camStatus;
 
-        isCallSuccess = Env->CallStaticBooleanMethod(relocateClassID, relocateID, j_v, j_q, j_focal, j_principal, j_resolution, j_bytes, j_state, j_x, j_y, j_z, j_platform);
+        isCallSuccess = Env->CallStaticBooleanMethod(relocateClassID, relocateID, j_v, j_q, j_focal, j_principal, j_resolution, j_bytes, j_method, j_x, j_y, j_z, j_platform, j_state);
         //isCallSuccess = FJavaWrapper::CallBooleanMethod(Env, FJavaWrapper::GameActivityThis, relocateID, j_v, j_q, j_focal, j_pricipal, j_resolution, j_bytes, j_state);
         UE_LOG(LogTemp, Warning, TEXT("finish call relocate"));
         Env->DeleteLocalRef(j_bytes);
@@ -174,14 +175,14 @@ bool AndroidUtility::Relocate(FVector cam_positon,FQuat cam_rotation, FVector2D 
         Env->DeleteGlobalRef(j_y);
         Env->DeleteGlobalRef(j_z);
 
-        if (isCallSuccess)
-        {
-            UE_LOG(LogTemp, Warning, TEXT("AndroidUtility::Relocate success!!"));
-        }
-        else
-        {
-            UE_LOG(LogTemp, Warning, TEXT("AndroidUtility::Relocate failure!!"));
-        }
+        //if (isCallSuccess)
+        //{
+        //    UE_LOG(LogTemp, Warning, TEXT("AndroidUtility::Relocate success!!"));
+        //}
+        //else
+        //{
+        //    UE_LOG(LogTemp, Warning, TEXT("AndroidUtility::Relocate failure!!"));
+        //}
     }
 #endif
 

@@ -50,14 +50,13 @@ bool iOSUtility::Init(FString& path)
 	return result;
 }
 
-bool iOSUtility::Relocate(FVector cam_positon, FQuat cam_rotation, FVector2D focal, FVector2D principal, FIntPoint resolution, uint8** cTexture, int length, int camStatus, FString aixs_x, FString aixs_y, FString aixs_z)
+bool iOSUtility::Relocate(FVector cam_positon, FQuat cam_rotation, FVector2D focal, FVector2D principal, FIntPoint resolution, uint8** cTexture, int length, int method, FString aixs_x, FString aixs_y, FString aixs_z,int camStatus)
 {
 	bool result = false;
 #if PLATFORM_IOS
 	AR_SFM_Point c_cam_pos = { cam_positon.X,cam_positon.Y,cam_positon.Z };
 	AR_SFM_rotation c_cam_qua = { cam_rotation.X,cam_rotation.Y, cam_rotation.Z, cam_rotation.W};
 	AR_SFM_focalLength c_focal = { focal.X,focal.Y};
-	UE_LOG(LogSpaceTarget, Log, TEXT("FKARSFM framework 11111 "));
 	AR_SFM_principalPoint c_principal = { principal.X,principal.Y};
 	AR_SFM_resolution c_resolution = { resolution.X,resolution.Y };
 	long c_length = length;
@@ -72,9 +71,8 @@ bool iOSUtility::Relocate(FVector cam_positon, FQuat cam_rotation, FVector2D foc
 	char* c_axis_y = const_cast<char*>(std_y.c_str());
 	char* c_axis_z = const_cast<char*>(std_z.c_str());
 
-	BOOL result_bool = _iOS_process_FKARSFM(c_cam_pos,c_cam_qua,c_focal, c_principal,c_resolution,camStatus, c_cTexture, c_length, c_axis_x, c_axis_y, c_axis_z, 1);//ue4: 1,   unity: 0
+	BOOL result_bool = _iOS_process_FKARSFM(c_cam_pos,c_cam_qua,c_focal, c_principal,c_resolution,method, c_cTexture, c_length, c_axis_x, c_axis_y, c_axis_z, 1,camStatus);//ue4: 1,   unity: 0
 	result = (result_bool == YES);
-	UE_LOG(LogSpaceTarget, Log, TEXT("FKARSFM framework 222222 %s   %c"),*(result?FString("true"):FString("false")), result_bool);
 #endif
 	return result;
 }
@@ -90,7 +88,6 @@ bool iOSUtility::GetResult(FString& recvStr)
 		recvStr = FString(std_cstr.c_str());
 		result = true;
 	}
-	UE_LOG(LogSpaceTarget, Log, TEXT("FKARSFM framework 3333333 %s"),*recvStr);
 	free(cstr);
 #endif
 	return result;

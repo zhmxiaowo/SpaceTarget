@@ -41,13 +41,16 @@ bool AARCoreSlamGenerator::GetCameraIntrinsics(FCameraIntrisics& ci)
 		EGoogleARCoreFunctionStatus google_intrinsics_status = UGoogleARCoreFrameFunctionLibrary::GetCameraImageIntrinsics(cameraintrinsics);
 		if (google_intrinsics_status == EGoogleARCoreFunctionStatus::Success)
 		{
-			cameraintrinsics->GetImageDimensions(_intrisics.resolution.X, _intrisics.resolution.Y);
-			cameraintrinsics->GetFocalLength(_intrisics.focal.X, _intrisics.focal.Y);
-			cameraintrinsics->GetPrincipalPoint(_intrisics.pricipal.X, _intrisics.pricipal.Y);
-
-			if(_intrisics.resolution.X != 0 && _intrisics.resolution.Y != 0)
+			int32 r1,r2;
+			cameraintrinsics->GetImageDimensions(r1, r2);
+			if(r1 != 0 && r2 != 0)
 			{
-				UE_LOG(LogSpaceTarget,Log,TEXT("_intrisics : %s"),*(_intrisics.resolution.ToString()));
+				_intrisics.resolution.X = r1; _intrisics.resolution.Y = r2;
+				cameraintrinsics->GetFocalLength(_intrisics.focal.X, _intrisics.focal.Y);
+				cameraintrinsics->GetPrincipalPoint(_intrisics.pricipal.X, _intrisics.pricipal.Y);
+				//UE_LOG(LogSpaceTarget,Log,TEXT("_intrisics : %s"),*(_intrisics.resolution.ToString()));
+				UE_LOG(LogSpaceTarget, Log, TEXT("resolution : %s  focal: %s  pricipal: %s"), *(_intrisics.resolution.ToString()), *(_intrisics.focal.ToString()), *(_intrisics.pricipal.ToString()));
+				ci = _intrisics;
 				isInitIntrinsics = true;
 				result = true;
 			}
@@ -78,9 +81,27 @@ bool AARCoreSlamGenerator::GetCameraPose(FCameraPose& cp)
 		{
 			FVector cam_pos = camManager->GetCameraLocation();
 			FQuat cam_qua = camManager->GetCameraRotation().Quaternion();
-			UE_LOG(LogSpaceTarget, Log, TEXT("cam_pos : %s  cam_qua : %s"), *(cam_pos.ToString()), *(cam_qua.ToString()));
+			//UE_LOG(LogSpaceTarget, Log, TEXT("cam_pos : %s  cam_qua : %s"), *(cam_pos.ToString()), *(cam_qua.ToString()));
+			//unreal will change it automaticly.but we need the real rotation relative to camera image.
+			switch (FPlatformMisc::GetDeviceOrientation())
+			{
+			case EDeviceScreenOrientation::Portrait:
+				break;
+			case EDeviceScreenOrientation::LandscapeLeft:
+				cam_qua = cam_qua * FRotator(0, 0, -90).Quaternion();
+				break;
+			case EDeviceScreenOrientation::LandscapeRight:
+				cam_qua = cam_qua * FRotator(0, 0, 90).Quaternion();
+				break;
+			case EDeviceScreenOrientation::PortraitUpsideDown:
+				cam_qua = cam_qua * FRotator(0, 0, 180).Quaternion();//need test.
+				break;
+			default:
+				break;
+			}
 			cp.position = cam_pos;
 			cp.rotation = cam_qua;
+
 			if(cp.position.ContainsNaN())
 			{
 				result = false;

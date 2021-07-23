@@ -39,6 +39,7 @@ void USpaceTargetSubsystem::Deinitialize()
 bool USpaceTargetSubsystem::Init(const ASpaceTargetTrackbleActor* actor,const TScriptInterface<ISlamGenerator>& platformSlam)
 {
     currStatus = 0;
+	camStatus = 0;
     _cTexture.data = NULL;
 	isRelocate = false;
 
@@ -103,7 +104,7 @@ bool USpaceTargetSubsystem::Tick(float Deltatime)
 {
     if (needToTick && stActor && stSlam)
     {
-        UE_LOG(LogTemp, Warning, TEXT("subsystem 1"));
+        //UE_LOG(LogTemp, Warning, TEXT("subsystem 1"));
 		if(isRelocate)
 		{
 			return true;
@@ -111,36 +112,39 @@ bool USpaceTargetSubsystem::Tick(float Deltatime)
 		isRelocate = true;
         FXRTrackingState xrState;
         stSlam->GetTrackingStatus(xrState);
-        UE_LOG(LogTemp, Warning, TEXT("subsystem 2"));
+        //UE_LOG(LogTemp, Warning, TEXT("subsystem 2"));
 		if (xrState == FXRTrackingState::Tracking)
 		{
 			Async(EAsyncExecution::ThreadPool, [&]()
 			{
-				bool bPose = stSlam->GetCameraPose(_cPose);
-				bool bIntrinsics = stSlam->GetCameraIntrinsics(_cIntrisics);
-				bool bTexture = stSlam->GetCameraTexture(_cTexture);
-				UE_LOG(LogTemp, Warning, TEXT("subsystem 3"));
-				UE_LOG(LogTemp, Warning, TEXT("bPose : %s bIntrinsics : %s  bTexture: %s  "), *(bPose ? FString("true") : FString("false")), *(bIntrinsics ? FString("true") : FString("false")), *(bTexture ? FString("true") : FString("false")));
+				volatile bool bPose = stSlam->GetCameraPose(_cPose);
+				volatile bool bIntrinsics = stSlam->GetCameraIntrinsics(_cIntrisics);
+				volatile bool bTexture = stSlam->GetCameraTexture(_cTexture);
+				//UE_LOG(LogTemp, Warning, TEXT("subsystem 3"));
+				//UE_LOG(LogTemp, Warning, TEXT("bPose : %s bIntrinsics : %s  bTexture: %s  "), *(bPose ? FString("true") : FString("false")), *(bIntrinsics ? FString("true") : FString("false")), *(bTexture ? FString("true") : FString("false")));
 				if (bPose && bIntrinsics && bTexture)
 				{
 					bool algorithomCall = false;
-					UE_LOG(LogTemp, Warning, TEXT("subsystem 4"));
+					//UE_LOG(LogTemp, Warning, TEXT("subsystem 4"));
 					auto task = Async(EAsyncExecution::ThreadPool, [&]()
 					{
 						FixImageAixs(_cTexture.direction,this->aixs);
 #if PLATFORM_ANDROID
 						//because algorithom use m,unreal engine use cm.
-						algorithomCall = AndroidUtility::Relocate((_cPose.position * 0.01f), _cPose.rotation, _cIntrisics.focal, _cIntrisics.pricipal, _cIntrisics.resolution, &_cTexture.data, _cTexture.length, currStatus,aixs.X,aixs.Y,aixs.Z);
+						algorithomCall = AndroidUtility::Relocate((_cPose.position * 0.01f), _cPose.rotation, _cIntrisics.focal, _cIntrisics.pricipal, _cIntrisics.resolution, &_cTexture.data, _cTexture.length, currStatus,aixs.X,aixs.Y,aixs.Z, camStatus);
 #elif PLATFORM_IOS
-						algorithomCall = iOSUtility::Relocate((_cPose.position * 0.01f), _cPose.rotation, _cIntrisics.focal, _cIntrisics.pricipal, _cIntrisics.resolution, &_cTexture.data, _cTexture.length, currStatus,aixs.X,aixs.Y,aixs.Z);
+						algorithomCall = iOSUtility::Relocate((_cPose.position * 0.01f), _cPose.rotation, _cIntrisics.focal, _cIntrisics.pricipal, _cIntrisics.resolution, &_cTexture.data, _cTexture.length, currStatus,aixs.X,aixs.Y,aixs.Z, camStatus);
 #else
 						algorithomCall = true;
 #endif
 					});
 					//it will break current thread.
 					task.Wait();
-					UE_LOG(LogTemp, Warning, TEXT("subsystem 5"));
-					UE_LOG(LogTemp, Warning, TEXT("algorithomCall : %s"), *(algorithomCall ? FString("true") : FString("false")));
+
+					camStatus = 1;
+
+					//UE_LOG(LogTemp, Warning, TEXT("subsystem 5"));
+					//UE_LOG(LogTemp, Warning, TEXT("algorithomCall : %s"), *(algorithomCall ? FString("true") : FString("false")));
 					FOutData newData;
 
 					if (algorithomCall)
@@ -197,26 +201,23 @@ bool USpaceTargetSubsystem::Tick(float Deltatime)
 							failureCount = maxFailureCount;
 						}
 					}
-					bool successOnMainThread = false;
+
+					volatile bool successOnMainThread = false;
+					volatile bool adjustmentOnMaththread = false;
 
 					//for running in the same frame,we move this action below.
-					if (successCount == maxSuccessCount)
+					if (algorithomCall && !isFound)
 					{
-						if(algorithomCall && !isFound)
-						{
-							successOnMainThread = true;
-						}
+						successOnMainThread = true;
 					}
-					
 
-					bool adjustmentOnMaththread = false;
 					if (algorithomCall)
 					{
 						//比较两个模型的角度差
 						FVector dir1 = newData.poseOfAR.rotation.Vector().GetSafeNormal();
 						FVector dir2 = oldData.poseOfAR.rotation.Vector().GetSafeNormal();
 						
-						float angleBetween = FMathf::ACos(FVector::DotProduct(dir1,dir2));
+						float angleBetween = FMathf::ACos(FVector::DotProduct(dir1,dir2)) * FMathf::RadToDeg;
 						//float angleBetween = FVector::DotProduct(dir1, dir2);
 
 						//比较两个模型的位置差
@@ -227,16 +228,16 @@ bool USpaceTargetSubsystem::Tick(float Deltatime)
 
 						//-------------------------------------------------------------------------------------------------------
 						//需要修改位置匹配模型
-						if (angleBetween > 5 || distanceBetween > 100 || NFABetween > 50 )
+						if (angleBetween > 10 || distanceBetween > 100 || NFABetween > 50 )
 						{
 							adjustmentOnMaththread = true;
 							oldData = newData;
 						}
 						//adjustmentOnMaththread = true;
-
+						//UE_LOG(LogSpaceTarget,Log,TEXT("angleBetween:%f   distanceBetween:%f   NFABetween:%f"), angleBetween, distanceBetween, NFABetween);
 					}
 
-					UE_LOG(LogTemp, Warning, TEXT("successOnMainThread: %s adjustmentOnMaththread: %s"), *(successOnMainThread ? FString("true") : FString("false")), *(adjustmentOnMaththread ? FString("true") : FString("false")));
+					//UE_LOG(LogTemp, Warning, TEXT("successOnMainThread: %s adjustmentOnMaththread: %s"), *(successOnMainThread ? FString("true") : FString("false")), *(adjustmentOnMaththread ? FString("true") : FString("false")));
 					if (successOnMainThread || adjustmentOnMaththread)
 					{
 						AsyncTask(ENamedThreads::GameThread, [&, algorithomCall, newData]()
@@ -250,13 +251,13 @@ bool USpaceTargetSubsystem::Tick(float Deltatime)
 									{
 										onSpaceTargetFoundBP.Broadcast(newData);
 									}
-									UE_LOG(LogTemp, Warning, TEXT("subsystem 6-2"));
+									//UE_LOG(LogTemp, Warning, TEXT("subsystem 6-2"));
 									adjustmentOnMaththread = true;
 								}
 							}
 							if (adjustmentOnMaththread)
 							{
-								UE_LOG(LogTemp, Warning, TEXT("Relocate success !"));
+								//UE_LOG(LogTemp, Warning, TEXT("Relocate success !"));
 								FTransform newPose;
 								if (stActor->centerMode == FWorldCenterMode::Target)
 								{
@@ -294,7 +295,7 @@ bool USpaceTargetSubsystem::Tick(float Deltatime)
 										onSpaceTargetPoseChangeBP.Broadcast(stActor, stActor->GetTransform());
 									}
 								}
-								UE_LOG(LogTemp, Warning, TEXT("subsystem 6-1"));
+								//UE_LOG(LogTemp, Warning, TEXT("subsystem 6-1"));
 							}
 							isRelocate = false;
 						});
@@ -323,10 +324,14 @@ bool USpaceTargetSubsystem::Tick(float Deltatime)
 					{
 						onSpacetTargetLostBP.Broadcast();
 					}
+					isRelocate = false;
 				});
 			}
-
-			isRelocate = false;
+			else
+			{
+				isRelocate = false;
+			}
+			camStatus = 0;
         }
     }
 
@@ -338,13 +343,13 @@ void USpaceTargetSubsystem::FixImageAixs(FImageDirection dir, ImageAixs& tempaix
 	switch (dir)
 	{
 	case FImageDirection::LEFT:
-		tempaix.X = FString("z");
-		tempaix.Y = FString("y");
+		tempaix.X = FString("-z");
+		tempaix.Y = FString("-y");
 		tempaix.Z = FString("x");
 		break;
 	case FImageDirection::RIGHT:
-		tempaix.X = FString("-z");
-		tempaix.Y = FString("-y");
+		tempaix.X = FString("z");
+		tempaix.Y = FString("y");
 		tempaix.Z = FString("x");
 		break;
 	case FImageDirection::UP:

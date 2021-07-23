@@ -37,7 +37,7 @@ public:
 	/// <param name="cTexture">camera texture data,fomat is RGBA8888</param>
 	/// <param name="length">cTexture length</param>
 	/// <returns></returns>
-	static bool Relocate(FVector cam_positon,FQuat cam_rotation,FVector2D focal,FVector2D principal,FIntPoint resolution,uint8** cTexture,int length, int camStatus, FString aixs_x, FString aixs_y, FString aixs_z);
+	static bool Relocate(FVector cam_positon,FQuat cam_rotation,FVector2D focal,FVector2D principal,FIntPoint resolution,uint8** cTexture,int length, int method, FString aixs_x, FString aixs_y, FString aixs_z,int camStatus);
 	//get the last relocated result.(JsonType)
 	static bool GetResult(FString& recvStr);
 };

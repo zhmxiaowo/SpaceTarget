@@ -33,6 +33,11 @@ FString SpaceTargetDefinition::dataModelsPath()
 	return path;
 }
 
+FString SpaceTargetDefinition::dataModelInnerPath()
+{
+	return FString("StaticMesh'/Game/SpaceTarget/Models/{0}/sfm_unreal.sfm_unreal'");
+}
+
 FString SpaceTargetDefinition::persistentPath()
 {
 	FString path = FPaths::ProjectPersistentDownloadDir() + "/run/";
