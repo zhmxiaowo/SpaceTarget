@@ -1,6 +1,6 @@
 [TOC]
 
-[English](README_EN.md "English")
+[English](document/README_EN.md "English")
 # SpaceTarget for Unreal Engine
 
 ## 前言
@@ -8,7 +8,7 @@
 
 官网: https://www.4dkankan.com/
 
-<img src=doc/ueimgs/60ddcb1246dc4.gif width = "30%"  alt="tt0.top-832429.gif"/>
+<img src=document/doc/ueimgs/60ddcb1246dc4.gif width = "30%"  alt="tt0.top-832429.gif"/>
 
 ### 开发环境设置
 
@@ -20,5 +20,6 @@
 	iOS 11.0 及以上版本
 
 
-[快速开始](QUICKSTART.md "快速开始")
-[使用自定义AR定位系统](OTHERARSYSTEM.md "使用自定义AR定位系统")
+[快速开始](document/QUICKSTART.md "快速开始")
+[使用自定义AR定位系统](document/OTHERARSYSTEM.md "使用自定义AR定位系统")
+[常见问题](document/FAQ.md "常见问题")
