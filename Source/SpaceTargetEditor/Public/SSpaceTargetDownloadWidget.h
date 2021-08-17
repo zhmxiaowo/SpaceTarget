@@ -20,8 +20,19 @@ public:
 
 
 	static const FString donwloadUrl;
+	static const FString eurUrl;
 
 private:
 	TSharedPtr<SEditableTextBox> sceneText;
+	TSharedPtr<SComboBox<TSharedPtr<FString>>> serverCompboBox;
+	TSharedPtr<STextBlock> serverText;
+	TArray<TSharedPtr<FString>> serverOptions;
+	int serverIndex ;
+
+
+	TSharedPtr<SComboBox<TSharedPtr<FString>>> deleteCompboBox;
+	TArray<TSharedPtr<FString>> deleteOptions;
+	TSharedPtr<STextBlock> deleteText;
+
 };
 

@@ -42,6 +42,7 @@ bool USpaceTargetSubsystem::Init(const ASpaceTargetTrackbleActor* actor,const TS
 	camStatus = 0;
     _cTexture.data = NULL;
 	isRelocate = false;
+	blockTime = FDateTime::Now();
 
     stActor = const_cast<ASpaceTargetTrackbleActor*>(actor);
     stSlam = platformSlam;
@@ -109,6 +110,13 @@ bool USpaceTargetSubsystem::Tick(float Deltatime)
 		{
 			return true;
 		}
+		//@TODO: if enable this, cpu will back to 100%,otherwise 260%,cause view lag.close it will make tracking more fast.
+//#if PLATFORM_IOS
+//		if ((FDateTime::Now() - blockTime).GetTotalMilliseconds() < 1000)
+//		{
+//			return true;
+//		}
+//#endif
 		isRelocate = true;
         FXRTrackingState xrState;
         stSlam->GetTrackingStatus(xrState);
@@ -309,6 +317,9 @@ bool USpaceTargetSubsystem::Tick(float Deltatime)
 				{
 					isRelocate = false;
 				}
+//#if PLATFORM_IOS
+//				blockTime = FDateTime::Now();
+//#endif
 			});
 
         }

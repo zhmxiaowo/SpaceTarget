@@ -48,7 +48,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	/** Use it to determine the model and tracking data.Please use it on Details panel. */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "4DMR-SpaceTarget")
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "4DMR-SpaceTarget")
 	FString dataBase;
 
 	/** decide the target move or xr camera move */

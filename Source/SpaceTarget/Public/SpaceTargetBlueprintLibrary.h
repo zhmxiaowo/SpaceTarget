@@ -14,6 +14,8 @@ class SPACETARGET_API USpaceTargetBlueprintLibrary : public UBlueprintFunctionLi
 {
 	GENERATED_BODY()
 public:
-	//UFUNCTION(BlueprintCallable, Category = "4DMR-SpaceTarget")
+
 	//static void Foo();
+	UFUNCTION(BlueprintCallable, Category = "4DMR-SpaceTarget")
+	static void GetAllSceneIdByDirectory(TArray<FString>& files,FString path = "");
 };

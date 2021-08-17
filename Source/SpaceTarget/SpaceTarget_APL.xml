@@ -21,7 +21,7 @@
   </resourceCopies>
 
   <resourceCopies>
-    <copyFile  src = "$S(PluginDir)/Libs/Android/ARRelocate-2021.07.13.ar.aar"  dst = "$S(BuildDir)/libs/ARRelocate-2021.07.13.ar.aar" />
+    <copyFile  src = "$S(PluginDir)/Libs/Android/ARRelocate-2021.07.28.ar.aar"  dst = "$S(BuildDir)/libs/ARRelocate-2021.07.28.ar.aar" />
   </resourceCopies>
 
 
@@ -66,7 +66,7 @@
       }
       dependencies
       {
-        implementation (name: 'ARRelocate-2021.07.13.ar',ext:'aar')
+        implementation (name: 'ARRelocate-2021.07.28.ar',ext:'aar')
       }
     </insert>
   </buildGradleAdditions>

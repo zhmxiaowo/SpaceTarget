@@ -16,4 +16,5 @@ public:
 private:
 	//show select dropdown first element.
 	TSharedPtr<STextBlock> currOptionTextBlock;
+	TSharedPtr<SComboBox<TSharedPtr<FString>>> currComboBox;
 };

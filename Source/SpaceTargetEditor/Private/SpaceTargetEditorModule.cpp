@@ -49,4 +49,32 @@ void FSpaceTargetEditorModule::ShutdownModule()
 		PropertyModule->UnregisterCustomClassLayout(FName("SpaceTargetTrackbleActor"));
 	}
 }
+
+TArray<FString> FSpaceTargetEditorModule::GetAllLocalScene()
+{
+	FString assetsPath = SpaceTargetDefinition::dataModelsPath();
+
+	int32 dataIndex = 0;
+	TArray<FString> tempFiles;
+	TArray<FString> Files;
+	IFileManager::Get().FindFiles(tempFiles, *(assetsPath + "/*"), false, true);
+	if (tempFiles.Num() > 0)
+	{
+		IPlatformFile& ipf = FPlatformFileManager::Get().GetPlatformFile();
+		int tempIndex = 0;
+		for (const FString& i : tempFiles)
+		{
+			FString curr = assetsPath + i + "/" + SpaceTargetDefinition::sfmobj;
+			if (ipf.FileExists(*curr))
+			{
+				tempIndex++;
+				//exist sfm data ,add it
+				Files.Add(FString(i));
+			}
+			//UE_LOG(LogTemp, Warning, TEXT("%s"), *curr);
+		}
+	}
+	return Files;
+}
+
 #undef LOCTEXT_NAMESPACE

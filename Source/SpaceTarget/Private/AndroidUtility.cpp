@@ -2,16 +2,17 @@
 
 #if PLATFORM_ANDROID
 
-jclass AndroidUtility::relocateClassID = NULL;
+jclass AndroidUtility::relocateClassID = nullptr;
 
-jobject AndroidUtility::relocateObjectID = NULL;
+jobject AndroidUtility::relocateObjectID = nullptr;
 
-jmethodID AndroidUtility::relocateInitID = NULL;
+jmethodID AndroidUtility::relocateInitID = nullptr;
 
-jmethodID AndroidUtility::relocateID = NULL;
+jmethodID AndroidUtility::relocateID = nullptr;
 
-jmethodID AndroidUtility::relocateResultID = NULL;
+jmethodID AndroidUtility::relocateResultID = nullptr;
 
+jmethodID AndroidUtility::relocateDispose = nullptr;
 
 jbyteArray AndroidUtility::ConvertToJByteArray(const uint8* byteArray, int32 size)
 {
@@ -86,14 +87,15 @@ bool AndroidUtility::Init(FString& path)
         //need to delete on ~()
         relocateObjectID = Env->NewGlobalRef(relocateObjectID);
         relocateID = FJavaWrapper::FindStaticMethod(Env, relocateClassID, "imgLocateProcess_unreal_argb32", "([F[F[F[F[I[BILjava/lang/String;Ljava/lang/String;Ljava/lang/String;II)Z", bIsOptional);
-        relocateInitID = FJavaWrapper::FindStaticMethod(Env, relocateClassID, "init", "(Landroid/content/Context;Ljava/lang/String;)Z", bIsOptional);
+        relocateInitID = FJavaWrapper::FindStaticMethod(Env, relocateClassID, "init", "(Landroid/content/Context;Ljava/lang/String;I)Z", bIsOptional);
         relocateResultID = FJavaWrapper::FindStaticMethod(Env, relocateClassID, "get_sfm_result", "()Ljava/lang/String;", bIsOptional);
+        relocateDispose = FJavaWrapper::FindStaticMethod(Env, relocateClassID, "close", "()V", bIsOptional);
         //get the android context is complex.we use UPL write a simple method 'Context ARContext()' to get it.
         jobject contextID = FJavaWrapper::CallObjectMethod(Env, FJavaWrapper::GameActivityThis, FJavaWrapper::FindMethod(Env, FJavaWrapper::GameActivityClassID, "ARContext", "()Landroid/content/Context;", bIsOptional));
 
         jstring jstr = GetJavaString(path);
 
-        isCallSuccess = (bool)Env->CallStaticBooleanMethod(relocateClassID, relocateInitID, contextID, jstr);
+        isCallSuccess = (bool)Env->CallStaticBooleanMethod(relocateClassID, relocateInitID, contextID, jstr, 100);
         //if we use va_list ,when it calculate jobject memery size will make mistake.so we use ↑ original method to call it.
         //bool b = FJavaWrapper::CallBooleanMethod(Env, relocateObjectID, relocateInitID, *contextID, *jstr);
         Env->DeleteGlobalRef(jstr);
@@ -204,4 +206,18 @@ bool AndroidUtility::GetResult(FString& recvStr)
     }
 #endif
     return isCallSuccess;
+}
+
+void AndroidUtility::release()
+{
+#if PLATFORM_ANDROID
+    if (JNIEnv* Env = FAndroidApplication::GetJavaEnv())
+    {
+        Env->CallStaticObjectMethod(relocateClassID, relocateDispose);
+        if (relocateObjectID)
+        {
+            Env->DeleteGlobalRef(relocateObjectID);
+        }
+    }
+#endif
 }

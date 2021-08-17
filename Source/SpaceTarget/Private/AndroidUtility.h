@@ -18,6 +18,7 @@ public:
 	static jmethodID relocateInitID;
 	static jmethodID relocateID;
 	static jmethodID relocateResultID;
+	static jmethodID relocateDispose;
 
 	static jbyteArray ConvertToJByteArray(const uint8* byteArray, int32 size);
 	static jfloatArray  ConvertToJFloatArray(const TArray<float>& floatArray);
@@ -40,5 +41,7 @@ public:
 	static bool Relocate(FVector cam_positon,FQuat cam_rotation,FVector2D focal,FVector2D principal,FIntPoint resolution,uint8** cTexture,int length, int method, FString aixs_x, FString aixs_y, FString aixs_z,int camStatus);
 	//get the last relocated result.(JsonType)
 	static bool GetResult(FString& recvStr);
+	/// dispose the tf and sfm ,release all.
+	static void release();
 };
 

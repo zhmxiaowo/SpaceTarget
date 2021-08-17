@@ -36,7 +36,7 @@ public class SpaceTarget : ModuleRules
 			AdditionalPropertiesForReceipt.Add("IOSPlugin", Path.Combine(ModuleDirectory, "SpaceTarget_IPL.xml"));
 			PrivateDependencyModuleNames.AddRange(new string[] { "Launch", "AppleARKit" });
             PublicAdditionalFrameworks.Add(new Framework("FKARSFM", "$(ModuleDir)/Libs/iOS/FKARSFM.embeddedframework.zip"));
-            PublicFrameworks.AddRange(new string[] { "CoreML" });
+            PublicFrameworks.AddRange(new string[] { "CoreML" , "Accelerate" });
 
 			// Now get the base of UE4's modules dir (could also be Developer, Editor, ThirdParty)
 

@@ -7,6 +7,7 @@
 #include "Modules/ModuleManager.h"
 #include "Modules/ModuleInterface.h"
 #include "UnrealEd.h"
+#include "SpaceTargetDefinition.h"
 
 class SPACETARGETEDITOR_API FSpaceTargetEditorModule : public IModuleInterface
 {
@@ -15,4 +16,8 @@ public:
 	/** IModuleInterface implementation */
 	virtual void StartupModule() override;
 	virtual void ShutdownModule() override;
+
+
+public:
+	static TArray<FString> GetAllLocalScene();
 };

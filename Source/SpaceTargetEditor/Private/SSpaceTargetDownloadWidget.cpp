@@ -30,19 +30,82 @@
 bool SSpaceTargetDownloadWidget::downloading = false;
 
 const FString SSpaceTargetDownloadWidget::donwloadUrl("https://4dkk.4dage.com/images/images{0}/ar/{1}");
+const FString SSpaceTargetDownloadWidget::eurUrl("https://eurs3.4dkankan.com/images/images{0}/ar/{1}");
+
 
 void SSpaceTargetDownloadWidget::Construct(const FArguments& InArgs)
 {
+	serverIndex = 0;
+	serverOptions.Add(MakeShared<FString>(FString("China")));
+	serverOptions.Add(MakeShared<FString>(FString("Internatianl")));
+
+	deleteOptions.Empty();
+	deleteOptions.Add(MakeShared<FString>(FString("---empty---")));
+	TArray<FString> initfiles = FSpaceTargetEditorModule::GetAllLocalScene();
+	for (int i = 0; i < initfiles.Num(); i++)
+	{
+		deleteOptions.Add(MakeShared<FString>(initfiles[i]));
+	}
+
 	SUserWidget::Construct(SUserWidget::FArguments()
 	[
 		SNew(SVerticalBox)
+		//tips
 		+SVerticalBox::Slot()
-		.FillHeight(0.382f)
+		.AutoHeight()
 		[
 			SNew(SMultiLineEditableText)
 			.Text(LOCTEXT("tips", "Enter the scene code of the scene, click the button to download the scene function.\n\nthe scene code can be obtained at the scene web address(behind 'm=')\n\nexmple: https://www.4dkankan.com/spc.html?m=Html34yLt \n\nthe scene id is: Html34yLt"))
 		]
+		//server point
+		+SVerticalBox::Slot()
+		.Padding(0.0f, 10.0f)
+		.AutoHeight()
+		.HAlign(HAlign_Left)
+		[
+			SNew(SHorizontalBox)
+			+SHorizontalBox::Slot()
+			.AutoWidth()
+			.HAlign(HAlign_Left)
+			[
+				SNew(STextBlock).Text(LOCTEXT("serverType","Server Point: "))
+			]
+			+ SHorizontalBox::Slot()
+			.AutoWidth()
+			.HAlign(HAlign_Left)
+			[
+				SAssignNew(serverCompboBox, SComboBox<TSharedPtr<FString>>)
+				.OptionsSource(&serverOptions)
+				.ToolTipText(LOCTEXT("international info", "[https://www.4dkankan.com] china server\n [https://eur.4dkankan.com] internatinal server"))
+				.OnGenerateWidget_Lambda([](TSharedPtr<FString> item)
+				{
+					//frist genarator widget will call a loop to this item
+					return SNew(STextBlock).Text(FText::FromString(*item));
+				})
+				.OnSelectionChanged_Lambda([this](TSharedPtr<FString> item, ESelectInfo::Type Type)
+				{
+					if (serverText)
+					{
+						serverText->SetText(FText::FromString(*item));
+					}
+					for (int i = 0; i < serverOptions.Num(); i++)
+					{
+						if (serverOptions[i]->Equals(*item))
+						{
+							serverIndex = i;
+							break;
+						}
+					}
+				})
+				.Content()
+				[
+					SAssignNew(serverText, STextBlock).Text(FText::FromString(*(serverOptions[0])))
+				]
+			]
+		]
+		//scene id download
 		+ SVerticalBox::Slot()
+		.AutoHeight()
 		.Padding(0.0f, 5.0f)
 		.HAlign(HAlign_Left)
 		[
@@ -82,7 +145,7 @@ void SSpaceTargetDownloadWidget::Construct(const FArguments& InArgs)
 						Info.bFireAndForget = false;
 						TSharedPtr<SNotificationItem> infoptr = FSlateNotificationManager::Get().AddNotification(Info);
 						
-						AsyncTask(ENamedThreads::AnyBackgroundThreadNormalTask,[this,&result, infoptr,scene]()
+						AsyncTask(ENamedThreads::AnyBackgroundThreadNormalTask,[this, infoptr,scene]()
 						{
 							volatile bool result = false;
 							result = DownloadAssetsBySceneId(scene);
@@ -279,17 +342,116 @@ void SSpaceTargetDownloadWidget::Construct(const FArguments& InArgs)
 				})
 			]
 		]
+		//delete item
+		+ SVerticalBox::Slot()
+		.Padding(0.0f, 5.0f)
+		.AutoHeight()
+		.HAlign(HAlign_Left)
+		[
+			SNew(SHorizontalBox)
+			+SHorizontalBox::Slot()
+			.AutoWidth()
+			.HAlign(HAlign_Left)
+			[
+				SNew(STextBlock).Text(LOCTEXT("exists","Local Data: "))
+				.ToolTipText(LOCTEXT("delete local","delete the local data"))
+			]
+			+ SHorizontalBox::Slot()
+			.AutoWidth()
+			.HAlign(HAlign_Left)
+			[
+				SAssignNew(deleteCompboBox, SComboBox<TSharedPtr<FString>>)
+				.OptionsSource(&deleteOptions)
+				.OnGenerateWidget_Lambda([](TSharedPtr<FString> item)
+				{
+					//frist genarator widget will call a loop to this item
+					return SNew(STextBlock).Text(FText::FromString(*item));
+				})
+				.OnSelectionChanged_Lambda([this](TSharedPtr<FString> item, ESelectInfo::Type Type)
+				{
+					if (item)
+					{
+						if (deleteText)
+						{
+							deleteText->SetText(FText::FromString(*item));
+						}
+					}
+				})
+				.OnComboBoxOpening_Lambda([this]()
+				{
+					deleteOptions.Empty();
+					deleteOptions.Add(MakeShared<FString>(FString("---empty---")));
+					TArray<FString> files = FSpaceTargetEditorModule::GetAllLocalScene();
+					int currIndex = 0;
+					FString currentStr = deleteText->GetText().ToString();
+					for (int i =0;i<files.Num();i++)
+					{
+						deleteOptions.Add(MakeShared<FString>(files[i]));
+						if (currentStr.Equals(files[i]))
+						{
+							currIndex = i+1;
+						}
+					}
+					deleteCompboBox->SetSelectedItem(deleteOptions[currIndex]);
+					deleteCompboBox->RefreshOptions();
+				})
+				.Content()
+				[
+					SAssignNew(deleteText, STextBlock).Text(FText::FromString(*deleteOptions[0]))
+				]
+			]
+			+ SHorizontalBox::Slot()
+			.AutoWidth()
+			.HAlign(HAlign_Left)
+			[
+				SNew(SButton)
+				.Text(FText::FromString("Delete"))
+				.OnClicked_Lambda([&]()-> FReply
+				{
+					IPlatformFile& ipf = FPlatformFileManager::Get().GetPlatformFile();
+					FString deleteName = *(deleteCompboBox->GetSelectedItem().Get());
+					FString deleteModelPath = SpaceTargetDefinition::dataModelsPath() + deleteName;
+					FString deleteDataPath = SpaceTargetDefinition::dataAssetsPath() + deleteName;
+					bool deleted = false;
+					if (ipf.DirectoryExists(*deleteModelPath))
+					{
+						UE_LOG(LogTemp,Log,TEXT("delete : %s"),*deleteModelPath);
+						ipf.DeleteDirectoryRecursively(*deleteModelPath);
+						deleted = true;
+					}
+					if (ipf.DirectoryExists(*deleteDataPath))
+					{
+						UE_LOG(LogTemp, Log, TEXT("delete : %s"), *deleteDataPath);
+						ipf.DeleteDirectoryRecursively(*deleteDataPath);
+						deleted = true;
+					}
+					if (deleted)
+					{
+						deleteCompboBox->SetSelectedItem(deleteOptions[0]);
+
+						AsyncTask(ENamedThreads::GameThread, [deleteName]()
+						{
+							FNotificationInfo Infonotice(FText::FromString(FString::Format(TEXT("{0} has been deleted."), { deleteName })));
+							Infonotice.ExpireDuration = 5.0f;
+							FSlateNotificationManager::Get().AddNotification(Infonotice);
+						});
+					}
+					return FReply::Handled();
+				})
+			]
+		]
 	]);
 
 }
 
 bool SSpaceTargetDownloadWidget::DownloadAssetsBySceneId(FString sceneId)
 {
+	FString currentUrl = serverIndex == 0? donwloadUrl: eurUrl;
 	//http url
-	FString url_bin = FString::Format(*donwloadUrl,{sceneId,SpaceTargetDefinition::sfmbin});
-	FString url_feat = FString::Format(*donwloadUrl, { sceneId,SpaceTargetDefinition::sfmfeat });
-	FString url_desc = FString::Format(*donwloadUrl, { sceneId,SpaceTargetDefinition::sfmdesc });
-	FString url_obj = FString::Format(*donwloadUrl, { sceneId,SpaceTargetDefinition::sfmobj });
+	FString url_bin = FString::Format(*currentUrl,{sceneId,SpaceTargetDefinition::sfmbin});
+	FString url_feat = FString::Format(*currentUrl, { sceneId,SpaceTargetDefinition::sfmfeat });
+	FString url_desc = FString::Format(*currentUrl, { sceneId,SpaceTargetDefinition::sfmdesc });
+	FString url_obj = FString::Format(*currentUrl, { sceneId,SpaceTargetDefinition::sfmobj });
 	
 	//local path
 	FString path = SpaceTargetDefinition::dataAssetsPath();
@@ -298,10 +460,10 @@ bool SSpaceTargetDownloadWidget::DownloadAssetsBySceneId(FString sceneId)
 	FString savepath_desc = FPaths::Combine(*path, *sceneId, *SpaceTargetDefinition::sfmdesc);
 	FString savepath_obj = FPaths::Combine(*SpaceTargetDefinition::dataModelsPath(), *sceneId, *SpaceTargetDefinition::sfmobj);
 
-	bool bin = HttpDownload(url_bin, savepath_bin,30);
-	bool feat = HttpDownload(url_feat, savepath_feat, 30);
-	bool desc = HttpDownload(url_desc, savepath_desc, 30);
-	bool obj = HttpDownload(url_obj, savepath_obj, 30);
+	bool bin = HttpDownload(url_bin, savepath_bin,60);
+	bool feat = HttpDownload(url_feat, savepath_feat, 60);
+	bool desc = HttpDownload(url_desc, savepath_desc, 60);
+	bool obj = HttpDownload(url_obj, savepath_obj, 60);
 
 	return bin && feat && desc && obj;
 }

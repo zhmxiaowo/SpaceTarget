@@ -78,7 +78,7 @@ void SpaceTargetTrackbleActorDetails::CustomizeDetails(IDetailLayoutBuilder& Det
 		]
 		.ValueContent()
 		[
-			SNew(SComboBox<TSharedPtr<FString>>).OptionsSource(&options)
+			SAssignNew(currComboBox,SComboBox<TSharedPtr<FString>>).OptionsSource(&options)
 			[
 				SAssignNew(currOptionTextBlock, STextBlock).Text(FText::FromString(*(options[dataIndex])))
 			]
@@ -98,6 +98,24 @@ void SpaceTargetTrackbleActorDetails::CustomizeDetails(IDetailLayoutBuilder& Det
 					dataBaseHandle->SetValue(*item);
 				}
 			})
+			.OnComboBoxOpening_Lambda([this]()
+				{
+					options.Empty();
+					options.Add(MakeShared<FString>(FString("---empty---")));
+					TArray<FString> files = FSpaceTargetEditorModule::GetAllLocalScene();
+					int currIndex = 0;
+					FString currentStr = currOptionTextBlock->GetText().ToString();
+					for (int i = 0; i < files.Num(); i++)
+					{
+						options.Add(MakeShared<FString>(files[i]));
+						if (currentStr.Equals(files[i]))
+						{
+							currIndex = i + 1;
+						}
+					}
+					currComboBox->SetSelectedItem(options[currIndex]);
+					currComboBox->RefreshOptions();
+				})
 		];
 
 		auto DataOnclick = []() -> FReply
@@ -113,7 +131,7 @@ void SpaceTargetTrackbleActorDetails::CustomizeDetails(IDetailLayoutBuilder& Det
 			}))
 			.SetDisplayName(LOCTEXT("SpaceTargetEditor","DownloadAssets"))
 			.SetMenuType(ETabSpawnerMenuType::Hidden);
-			FGlobalTabmanager::Get()->InvokeTab(SSpaceTargetDownladWidget);
+			FGlobalTabmanager::Get()->TryInvokeTab(SSpaceTargetDownladWidget);
 
 			return FReply::Handled();
 		};

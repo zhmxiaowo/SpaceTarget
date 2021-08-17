@@ -40,13 +40,13 @@ FString SpaceTargetDefinition::dataModelInnerPath()
 
 FString SpaceTargetDefinition::persistentPath()
 {
-	FString path = FPaths::ProjectPersistentDownloadDir() + "/run/";
+	FString path = FPaths::ProjectPersistentDownloadDir() + FString::Format(TEXT("/{0}/"), { _dataID });;
 	return path;
 }
 
 FString SpaceTargetDefinition::persistentPathInner()
 {
-	FString path = FPaths::ProjectPersistentDownloadDir() + "/run/ar/";
+	FString path = FPaths::ProjectPersistentDownloadDir() + FString::Format(TEXT("/{0}/ar/"), { _dataID });;
 
 	return path;
 }

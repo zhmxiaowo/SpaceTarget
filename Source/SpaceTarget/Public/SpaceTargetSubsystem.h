@@ -37,6 +37,7 @@ protected:
     UPROPERTY(BlueprintReadWrite, Category = "4DMR-SpaceTarget")
     ASpaceTargetTrackbleActor* stActor;
     bool needToTick = false;
+    FDateTime blockTime;
 
     FCameraPose _cPose;
     FCameraPose _cNewPose;
