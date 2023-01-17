@@ -5,6 +5,7 @@
 #include "SpaceTargetModule.h"
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "HAL/FileManager.h"
 #include "SpaceTargetDefinition.h"
 #include "SpaceTargetTrackbleActor.generated.h"
 

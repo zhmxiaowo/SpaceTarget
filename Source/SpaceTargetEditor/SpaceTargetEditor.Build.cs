@@ -10,8 +10,10 @@ public class SpaceTargetEditor : ModuleRules
         //PrecompileForTargets = PrecompileTargetsType.Editor;
         //bPrecompile = true;
         PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
-	
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore","SpaceTarget" ,"HTTP"});
+
+		bEnableUndefinedIdentifierWarnings = false;
+
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore","SpaceTarget" ,"HTTP", "Json"});
 		PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore", "EditorStyle" });
 
 		//PublicDependencyModuleNames.AddRange(new string[] { "SpaceTarget" });

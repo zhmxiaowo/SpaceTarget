@@ -10,6 +10,9 @@
 #include "AndroidUtility.h"
 #include "iOSUtility.h"
 #include "MathUtil.h"
+#include "Containers/Ticker.h"
+#include "HAL/PlatformFileManager.h"
+#include "Async/Async.h"
 
 bool USpaceTargetSubsystem::ShouldCreateSubsystem(UObject* Outer) const
 {

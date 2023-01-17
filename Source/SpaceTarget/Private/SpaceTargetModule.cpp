@@ -1,8 +1,10 @@
 // Copyright 4DAGE Games, Inc. All Rights Reserved.
 
-//#include "CoreMinimal.h"
 #include "SpaceTargetModule.h"
-#include "Logging/LogMacros.h"
+#include "CoreMinimal.h"
+
+
+
 
 DEFINE_LOG_CATEGORY(LogSpaceTarget);
 

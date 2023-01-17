@@ -33,6 +33,10 @@ const FString SSpaceTargetDownloadWidget::donwloadUrl("https://4dkk.4dage.com/im
 const FString SSpaceTargetDownloadWidget::eurUrl("https://eurs3.4dkankan.com/images/images{0}/ar/{1}");
 
 
+const FString SSpaceTargetDownloadWidget::localDomain("https://www.4dkankan.com/");
+
+const FString SSpaceTargetDownloadWidget::globalDomain("https://eur.4dkankan.com/");
+
 void SSpaceTargetDownloadWidget::Construct(const FArguments& InArgs)
 {
 	serverIndex = 0;
@@ -447,6 +451,46 @@ void SSpaceTargetDownloadWidget::Construct(const FArguments& InArgs)
 bool SSpaceTargetDownloadWidget::DownloadAssetsBySceneId(FString sceneId)
 {
 	FString currentUrl = serverIndex == 0? donwloadUrl: eurUrl;
+	FString V3("images/images{0}/ar/{1}");
+	FString V4("scene_view_data/{0}/images/ar/{1}");
+	FString domain = (serverIndex == 0? "https://4dkk.4dage.com/" : "https://eurs3.4dkankan.com/");
+
+	FString resultJson;
+	FString V3Url = domain + FString::Format(*V3, {sceneId, SpaceTargetDefinition::sfmbin});
+	FString V4Url = domain + FString::Format(*V4, {sceneId, SpaceTargetDefinition::sfmbin});
+	if (HttpContentLength(domain + V3Url, 10) > 1024 * 2 )
+	{
+		currentUrl = domain + V3;
+	}
+	else
+	{
+		currentUrl = domain + V4;
+	}
+
+	//FString RequestUrl = (serverIndex == 0 ? FString("https://test.4dkankan.com/ucenter/user/scene/getArPathByNum") : FString("https://www.4dkankan.com/ucenter/user/scene/getArPathByNum")) + "?num=" + sceneId;
+	//FString resultJson;
+	//if (HttpRequest(RequestUrl, resultJson,"GET",20))
+	//{
+	//	TSharedRef<TJsonReader<TCHAR>> JsonReader = TJsonReaderFactory<TCHAR>::Create(resultJson);
+	//	TSharedPtr<FJsonObject> jRoot;
+	//	bool BFlag = FJsonSerializer::Deserialize(JsonReader, jRoot);
+	//	if (BFlag)
+	//	{
+	//		if (jRoot->GetNumberField("code") == 0)
+	//		{
+	//			currentUrl = jRoot->GetStringField("data");
+	//			currentUrl = (serverIndex == 0 ? localDomain:globalDomain) + currentUrl;
+	//		}
+	//		else
+	//		{
+	//			return false;
+	//		}
+	//	}
+	//	else
+	//	{
+	//		return false;
+	//	}
+	//}
 	//http url
 	FString url_bin = FString::Format(*currentUrl,{sceneId,SpaceTargetDefinition::sfmbin});
 	FString url_feat = FString::Format(*currentUrl, { sceneId,SpaceTargetDefinition::sfmfeat });
@@ -520,6 +564,77 @@ bool SSpaceTargetDownloadWidget::HttpDownload(const FString& url, const FString&
 		else
 		{
 			result = false;
+			downloadlock = false;
+			return;
+		}
+	});
+	HttpRequest->ProcessRequest();
+
+	while (downloadlock)
+	{
+		FPlatformProcess::Sleep(0);
+	}
+
+	return result;
+}
+
+bool SSpaceTargetDownloadWidget::HttpRequest(const FString& url, FString& result, FString Method /*= "GET"*/, float timeout /*= 3*/)
+{
+	TSharedRef<IHttpRequest, ESPMode::ThreadSafe> HttpRequest = FHttpModule::Get().CreateRequest();
+	HttpRequest->SetVerb(Method);
+	HttpRequest->SetURL(url);
+	HttpRequest->SetTimeout(timeout);
+	volatile bool resultBool = true;
+	volatile bool downloadlock = true;
+	HttpRequest->OnProcessRequestComplete().BindLambda([&downloadlock, &resultBool, &result](FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+		{
+			if (Response.IsValid() && EHttpResponseCodes::IsOk(Response->GetResponseCode()) && bWasSuccessful)
+			{
+				// Open / Create the file
+				//Response->GetContent().GetData()
+				const std::string cstr(reinterpret_cast<const char*>(Response->GetContent().GetData()), Response->GetContent().Num());
+				result = cstr.c_str();
+				resultBool = true;
+				downloadlock = false;
+			}
+			else
+			{
+				resultBool = false;
+				downloadlock = false;
+				return;
+			}
+		});
+	HttpRequest->ProcessRequest();
+
+	while (downloadlock)
+	{
+		FPlatformProcess::Sleep(0);
+	}
+
+	return resultBool;
+}
+
+float SSpaceTargetDownloadWidget::HttpContentLength(const FString& url, float timeout /*= 3*/)
+{
+	TSharedRef<IHttpRequest, ESPMode::ThreadSafe> HttpRequest = FHttpModule::Get().CreateRequest();
+	HttpRequest->SetVerb("GET");
+	HttpRequest->SetURL(url);
+	HttpRequest->SetTimeout(timeout);
+	volatile bool resultBool = true;
+	volatile bool downloadlock = true;
+	float result;
+	HttpRequest->OnProcessRequestComplete().BindLambda([&downloadlock, &resultBool,& result](FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+	{
+		if (Response.IsValid() && EHttpResponseCodes::IsOk(Response->GetResponseCode()) && bWasSuccessful)
+		{
+			// Open / Create the file
+			//Response->GetContent().GetData()
+			result = Response->GetContentLength();
+			downloadlock = false;
+		}
+		else
+		{
+			result = 0;
 			downloadlock = false;
 			return;
 		}

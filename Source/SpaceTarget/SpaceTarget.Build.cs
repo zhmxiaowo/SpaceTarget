@@ -9,7 +9,9 @@ public class SpaceTarget : ModuleRules
 	public SpaceTarget(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
-	
+
+		bEnableUndefinedIdentifierWarnings = false;
+
 		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "AugmentedReality", "GeometricObjects" });
 		PrivateDependencyModuleNames.AddRange(new string[] { "Json", "JsonUtilities", "Engine", "RenderCore", "RHI", });
 

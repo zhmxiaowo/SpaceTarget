@@ -4,6 +4,7 @@
 #include "SpaceTargetTrackbleActor.h"
 #include "Components/StaticMeshComponent.h"
 #include "SpaceTargetDefinition.h"
+#include "Engine/StaticMesh.h"
 
 FString emptyStr = FString("---empty---");
 

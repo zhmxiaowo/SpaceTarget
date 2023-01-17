@@ -4,9 +4,11 @@
 
 
 #include "CoreMinimal.h"
+#include "Logging/LogMacros.h"
 #include "Modules/ModuleInterface.h"
-
+#include "Modules/ModuleManager.h"
 DECLARE_LOG_CATEGORY_EXTERN(LogSpaceTarget, Log, All);
+
 /**
  * FSpaceTargetModule
  */
@@ -24,3 +26,4 @@ public:
 	/** IModuleInterface implementation */
 	virtual void ShutdownModule() override;
 };
+

@@ -2,6 +2,7 @@
 
 #include "SpaceTargetDefinition.h"
 #include "CoreMinimal.h"
+#include "UObject/Interface.h"
 #include "SlamGenerator.generated.h"
 
 

@@ -1,6 +1,9 @@
 #pragma once
 #include "SlamGenerator.h"
 #include "SpaceTargetDefinition.h"
+#include "Camera/PlayerCameraManager.h"
+#include "HAL/PlatformFileManager.h"
+#include "GameFramework/PlayerController.h"
 #include <UObject/Object.h>
 #include "ARCoreSlamGenerator.generated.h"
 
